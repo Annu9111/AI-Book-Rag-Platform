@@ -68,3 +68,16 @@ def ask_books(request):
     answer = ask_question(query)
 
     return Response({"answer": answer})
+
+from .rag import ask_question
+
+@api_view(['POST'])
+def ask_ai(request):
+    query = request.data.get("query")
+
+    answer = ask_question(query)
+
+    return Response({
+        "query": query,
+        "answer": answer
+    })
