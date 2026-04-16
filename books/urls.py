@@ -7,5 +7,5 @@ urlpatterns = [
     path('books/add/', views.add_book),
     path('scrape/', views.scrape_books_api),
     path('ask/', views.ask_books),
-    path('ask/', views.ask_ai),
+    path('', views.home),
 ]

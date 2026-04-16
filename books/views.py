@@ -5,6 +5,10 @@ from rest_framework.response import Response
 from .models import Book
 from .serializers import BookSerializer
 from .scraper import scrape_books
+# from django.shortcuts import render
+
+def home(request):
+    return render(request, "index.html")
 
 
 # GET all books

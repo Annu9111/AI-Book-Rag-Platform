@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Book Assistant</title>
+</head>
+<body>
+
+<h2>📚 Ask Book AI</h2>
+
+<input type="text" id="question" placeholder="Ask something..." style="width:300px;">
+<button onclick="ask()">Ask</button>
+
+<p id="response"></p>
+
+<script>
+function ask() {
+    let query = document.getElementById("question").value;
+
+    fetch("/api/ask/", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ query: query })
+    })
+    .then(res => res.json())
+    .then(data => {
+        document.getElementById("response").innerText = data.answer;
+    });
+}
+</script>
+
+</body>
+</html>
