@@ -5,13 +5,15 @@ from rest_framework.response import Response
 from .models import Book
 from .serializers import BookSerializer
 from .scraper import scrape_books
-# from django.shortcuts import render
+from .rag import ask_question
 
+
+# -------------------- HOME --------------------
 def home(request):
     return render(request, "index.html")
 
 
-# GET all books
+# -------------------- GET ALL BOOKS --------------------
 @api_view(['GET'])
 def get_books(request):
     books = Book.objects.all()
@@ -19,7 +21,7 @@ def get_books(request):
     return Response(serializer.data)
 
 
-# GET single book
+# -------------------- GET SINGLE BOOK --------------------
 @api_view(['GET'])
 def get_book(request, id):
     try:
@@ -30,7 +32,7 @@ def get_book(request, id):
         return Response({"error": "Book not found"}, status=404)
 
 
-# SCRAPE BOOKS (IMPORTANT)
+# -------------------- SCRAPE BOOKS --------------------
 @api_view(['GET'])
 def scrape_books_api(request):
     books_data = scrape_books()
@@ -49,7 +51,7 @@ def scrape_books_api(request):
     })
 
 
-# ADD BOOK (POST API)
+# -------------------- ADD BOOK --------------------
 @api_view(['POST'])
 def add_book(request):
     serializer = BookSerializer(data=request.data)
@@ -60,28 +62,23 @@ def add_book(request):
 
     return Response(serializer.errors, status=400)
 
-from .rag import ask_question
 
+# -------------------- AI ASK (MAIN FEATURE) --------------------
 @api_view(['POST'])
 def ask_books(request):
     query = request.data.get("query")
 
     if not query:
-        return Response({"error": "Query is required"})
+        return Response({"error": "Query is required"}, status=400)
 
-    answer = ask_question(query)
-
-    return Response({"answer": answer})
-
-from .rag import ask_question
-
-@api_view(['POST'])
-def ask_ai(request):
-    query = request.data.get("query")
-
-    answer = ask_question(query)
+    try:
+        answer = ask_question(query)
+    except Exception as e:
+        return Response({
+            "error": "AI failed",
+            "details": str(e)
+        }, status=500)
 
     return Response({
-        "query": query,
-        "answer": answer
+        "answer": answer   
     })

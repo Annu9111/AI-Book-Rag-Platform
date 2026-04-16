@@ -2,31 +2,84 @@
 <html>
 <head>
     <title>AI Book Assistant</title>
+
+    <style>
+        body {
+            font-family: Arial;
+            background: #0f172a;
+            color: white;
+            text-align: center;
+            padding-top: 100px;
+        }
+
+        h1 {
+            font-size: 40px;
+            margin-bottom: 30px;
+        }
+
+        input {
+            width: 400px;
+            padding: 12px;
+            border-radius: 8px;
+            border: none;
+            font-size: 16px;
+        }
+
+        button {
+            padding: 12px 20px;
+            border-radius: 8px;
+            border: none;
+            background: #22c55e;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #16a34a;
+        }
+
+        #result {
+            margin-top: 30px;
+            width: 60%;
+            margin-left: auto;
+            margin-right: auto;
+            background: #1e293b;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: left;
+            white-space: pre-line;
+        }
+    </style>
 </head>
+
 <body>
 
-<h2>📚 Ask Book AI</h2>
+<h1>📚 AI Book Assistant</h1>
 
-<input type="text" id="question" placeholder="Ask something..." style="width:300px;">
+<input id="query" placeholder="Ask something..." />
 <button onclick="ask()">Ask</button>
 
-<p id="response"></p>
+<div id="result"></div>
 
 <script>
-function ask() {
-    let query = document.getElementById("question").value;
+async function ask() {
+    let query = document.getElementById("query").value;
 
-    fetch("/api/ask/", {
+    document.getElementById("result").innerHTML = "⏳ Thinking...";
+
+    let res = await fetch("/ask/", {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
         },
         body: JSON.stringify({ query: query })
-    })
-    .then(res => res.json())
-    .then(data => {
-        document.getElementById("response").innerText = data.answer;
     });
+
+    let data = await res.json();
+    console.log("RESPONSE:", data);
+
+    document.getElementById("result").innerHTML = data.answer;
 }
 </script>
 
