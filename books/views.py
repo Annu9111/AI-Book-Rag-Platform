@@ -55,3 +55,16 @@ def add_book(request):
         return Response(serializer.data, status=201)
 
     return Response(serializer.errors, status=400)
+
+from .rag import ask_question
+
+@api_view(['POST'])
+def ask_books(request):
+    query = request.data.get("query")
+
+    if not query:
+        return Response({"error": "Query is required"})
+
+    answer = ask_question(query)
+
+    return Response({"answer": answer})
