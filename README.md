@@ -82,15 +82,15 @@ python manage.py runserver
 
 ### UI
 
-![UI](Screenshots/screenshot1.png)
+![UI](ai-book-rag-platform/Screenshots/screenshot1.png)
 
 ### API
 
-![API](Screenshots/screenshot2.png)
+![API](ai-book-rag-platform/Screenshots/screenshot2.png)
 
 ### Result
 
-![Result](Screenshots/screenshot3.png)
+![Result](ai-book-rag-platform/Screenshots/screenshot3.png)
 
 ---
 
