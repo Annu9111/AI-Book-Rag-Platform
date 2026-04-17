@@ -23,6 +23,7 @@
             border-radius: 8px;
             border: none;
             font-size: 16px;
+            margin-right: 10px;
         }
 
         button {
@@ -66,20 +67,39 @@
 async function ask() {
     let query = document.getElementById("query").value;
 
+    if (!query) {
+        document.getElementById("result").innerHTML = "⚠️ Please enter a question";
+        return;
+    }
+
     document.getElementById("result").innerHTML = "⏳ Thinking...";
 
-    let res = await fetch("/ask/", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ query: query })
-    });
+    try {
+        let res = await fetch("/ask/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ query: query })
+        });
 
-    let data = await res.json();
-    console.log("RESPONSE:", data);
+        let data = await res.json();
 
-    document.getElementById("result").innerHTML = data.answer;
+        console.log("RESPONSE:", data);  // Debug
+
+        // 🔥 FIX: handle all cases safely
+        if (data.answer) {
+            document.getElementById("result").innerHTML = data.answer;
+        } else if (data.error) {
+            document.getElementById("result").innerHTML = "❌ " + data.error;
+        } else {
+            document.getElementById("result").innerHTML = "⚠️ Unexpected response";
+        }
+
+    } catch (error) {
+        console.error(error);
+        document.getElementById("result").innerHTML = "❌ Server error. Try again.";
+    }
 }
 </script>
 
