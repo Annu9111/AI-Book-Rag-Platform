@@ -1,6 +1,10 @@
 from django.shortcuts import render
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from rest_framework import status
+
+from django.views.decorators.csrf import csrf_exempt
+from rest_framework.decorators import authentication_classes, permission_classes
 
 from .models import Book
 from .serializers import BookSerializer
@@ -53,6 +57,9 @@ def scrape_books_api(request):
 
 # -------------------- ADD BOOK --------------------
 @api_view(['POST'])
+@csrf_exempt
+@authentication_classes([])   # IMPORTANT
+@permission_classes([])       # IMPORTANT
 def add_book(request):
     serializer = BookSerializer(data=request.data)
 
@@ -65,20 +72,29 @@ def add_book(request):
 
 # -------------------- AI ASK (MAIN FEATURE) --------------------
 @api_view(['POST'])
+@csrf_exempt
+@authentication_classes([])   
+@permission_classes([])       
 def ask_books(request):
     query = request.data.get("query")
 
     if not query:
-        return Response({"error": "Query is required"}, status=400)
+        return Response(
+            {"error": "Query is required"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
     try:
         answer = ask_question(query)
+
+        return Response({
+            "answer": answer
+        })
+
     except Exception as e:
+        print("❌ ERROR:", str(e))   # shows error in terminal
+
         return Response({
             "error": "AI failed",
             "details": str(e)
         }, status=500)
-
-    return Response({
-        "answer": answer   
-    })

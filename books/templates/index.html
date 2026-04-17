@@ -56,7 +56,7 @@
 
 <body>
 
-<h1>📚 AI Book Assistant</h1>
+<h1> AI Book Assistant</h1>
 
 <input id="query" placeholder="Ask something..." />
 <button onclick="ask()">Ask</button>
@@ -75,6 +75,7 @@ async function ask() {
     document.getElementById("result").innerHTML = "⏳ Thinking...";
 
     try {
+        
         let res = await fetch("/ask/", {
             method: "POST",
             headers: {
@@ -85,20 +86,22 @@ async function ask() {
 
         let data = await res.json();
 
-        console.log("RESPONSE:", data);  // Debug
+        console.log("API RESPONSE:", data);
 
-        // 🔥 FIX: handle all cases safely
+        // Safe handling
         if (data.answer) {
             document.getElementById("result").innerHTML = data.answer;
         } else if (data.error) {
             document.getElementById("result").innerHTML = "❌ " + data.error;
         } else {
-            document.getElementById("result").innerHTML = "⚠️ Unexpected response";
+            document.getElementById("result").innerHTML =
+                "⚠️ Unexpected response: " + JSON.stringify(data);
         }
 
     } catch (error) {
         console.error(error);
-        document.getElementById("result").innerHTML = "❌ Server error. Try again.";
+        document.getElementById("result").innerHTML =
+            "❌ Server error. Check backend.";
     }
 }
 </script>

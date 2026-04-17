@@ -1,15 +1,22 @@
-from langchain_openai import OpenAIEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain_core.documents import Document
+from langchain_community.embeddings import HuggingFaceEmbeddings
+
 from .models import Book
 
 from openai import OpenAI
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
-# 🔹 Create vector database
+# -------------------- CREATE VECTOR DB --------------------
 def create_vector_db():
     books = Book.objects.all()
+
+    if not books.exists():
+        return None
 
     docs = []
 
@@ -23,80 +30,120 @@ Link: {book.url}
 """
         docs.append(Document(page_content=content))
 
-    # ⚠️ If no books
-    if not docs:
-        return None
-
     try:
-        embeddings = OpenAIEmbeddings(
-            api_key=os.getenv("OPENAI_API_KEY")
+        #  Better model (more accurate than default)
+        embeddings = HuggingFaceEmbeddings(
+            model_name="sentence-transformers/all-MiniLM-L6-v2"
         )
 
         db = FAISS.from_documents(docs, embeddings)
         return db
 
-    except Exception:
-        # 🔥 fallback if embeddings fail
+    except Exception as e:
+        print("❌ Embedding Error:", e)
         return None
 
 
-# 🔹 Ask question (MAIN FUNCTION)
+# -------------------- FORMAT BOOKS (CLEAN OUTPUT) --------------------
+def format_books(docs):
+    result = ""
+
+    for doc in docs:
+        result += f"""
+📖 Book
+
+{doc.page_content.strip()}
+
+-------------------------
+"""
+
+    return result
+
+
+# -------------------- ASK QUESTION --------------------
 def ask_question(query):
     try:
         db = create_vector_db()
 
+        # ❌ No data case
         if db is None:
             return f"""
-📚 Demo Response
+📚 No data found
 
-Recommended Book: Pride and Prejudice
-
-💡 Reason:
-A timeless romantic novel with strong characters.
+👉 Please scrape books first using:
+http://127.0.0.1:8000/scrape/
 
 🔍 Your query:
 {query}
 """
 
         docs = db.similarity_search(query, k=3)
+
+        if not docs:
+            return "❌ No relevant books found."
+
         context = "\n".join([doc.page_content for doc in docs])
 
-        client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        # -------------------- TRY OPENAI --------------------
+        try:
+            api_key = os.getenv("OPENAI_API_KEY")
 
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {
-                    "role": "system",
-                    "content": "You are a smart book recommendation assistant."
-                },
-                {
-                    "role": "user",
-                    "content": f"""
+            #  If no API key → skip OpenAI
+            if not api_key:
+                raise Exception("No API key found")
+
+            client = OpenAI(api_key=api_key)
+
+            response = client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "You are a helpful book recommendation assistant."
+                    },
+                    {
+                        "role": "user",
+                        "content": f"""
 Books data:
 {context}
 
 User question:
 {query}
 
-Give best recommendation with reason.
+Give the best recommendation with reason in clean format.
 """
-                }
-            ]
-        )
+                    }
+                ]
+            )
 
-        return response.choices[0].message.content
+            return response.choices[0].message.content
 
-    except Exception:
-        # 🔥 IMPORTANT: fallback if API quota error
-        return f"""
-⚠️ Demo Mode (API limit reached)
+        # -------------------- FALLBACK (NO API) --------------------
+        except Exception as api_error:
+            print("⚠️ OpenAI Error:", api_error)
 
-📚 Recommended Book:
-Pride and Prejudice by Jane Austen
+            return f"""
+⚠️ Demo Mode (No API)
+
+📚 Recommended Books:
+
+{format_books(docs)}
 
 💡 Reason:
-Classic romantic novel with deep emotional storytelling.
+These books are selected based on semantic similarity to your query.
+
+🔍 Your query:
+{query}
+"""
+
+    except Exception as e:
+        print("❌ RAG Error:", e)
+
+        return f"""
+❌ Something went wrong
+
+Error:
+{str(e)}
 
 🔍 Your query:
 {query}
