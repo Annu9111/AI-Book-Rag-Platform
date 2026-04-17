@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Book Assistant</title>
+
+    <style>
+        body {
+            font-family: Arial;
+            background: #0f172a;
+            color: white;
+            text-align: center;
+            padding-top: 100px;
+        }
+
+        h1 {
+            font-size: 40px;
+            margin-bottom: 30px;
+        }
+
+        input {
+            width: 400px;
+            padding: 12px;
+            border-radius: 8px;
+            border: none;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+
+        button {
+            padding: 12px 20px;
+            border-radius: 8px;
+            border: none;
+            background: #22c55e;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #16a34a;
+        }
+
+        #result {
+            margin-top: 30px;
+            width: 60%;
+            margin-left: auto;
+            margin-right: auto;
+            background: #1e293b;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: left;
+            white-space: pre-line;
+        }
+    </style>
+</head>
+
+<body>
+
+<h1> AI Book Assistant</h1>
+
+<input id="query" placeholder="Ask something..." />
+<button onclick="ask()">Ask</button>
+
+<div id="result"></div>
+
+<script>
+async function ask() {
+    let query = document.getElementById("query").value;
+
+    if (!query) {
+        document.getElementById("result").innerHTML = "⚠️ Please enter a question";
+        return;
+    }
+
+    document.getElementById("result").innerHTML = "⏳ Thinking...";
+
+    try {
+        
+        let res = await fetch("/ask/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ query: query })
+        });
+
+        let data = await res.json();
+
+        console.log("API RESPONSE:", data);
+
+        // Safe handling
+        if (data.answer) {
+            document.getElementById("result").innerHTML = data.answer;
+        } else if (data.error) {
+            document.getElementById("result").innerHTML = "❌ " + data.error;
+        } else {
+            document.getElementById("result").innerHTML =
+                "⚠️ Unexpected response: " + JSON.stringify(data);
+        }
+
+    } catch (error) {
+        console.error(error);
+        document.getElementById("result").innerHTML =
+            "❌ Server error. Check backend.";
+    }
+}
+</script>
+
+</body>
+</html>
